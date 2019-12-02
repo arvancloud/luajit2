@@ -11,6 +11,7 @@
 #include "lj_err.h"
 #include "lj_str.h"
 #include "lj_char.h"
+#include "wyhash.h"
 
 /* -- String helpers ------------------------------------------------------ */
 
@@ -133,30 +134,34 @@ void lj_str_resize(lua_State *L, MSize newmask)
 static MSize
 lj_str_original_hash(const char *str, size_t lenx)
 {
-  MSize len = (MSize)lenx;
-  MSize a, b, h = len;
+  // MSize len = (MSize)lenx;
+  // MSize a, b, h = len;
 
-  /* Compute string hash. Constants taken from lookup3 hash by Bob Jenkins. */
-  if (len >= 4) {  /* Caveat: unaligned access! */
-    a = lj_getu32(str);
-    h ^= lj_getu32(str+len-4);
-    b = lj_getu32(str+(len>>1)-2);
-    h ^= b; h -= lj_rol(b, 14);
-    b += lj_getu32(str+(len>>2)-1);
-  } else if (len > 0) {
-    a = *(const uint8_t *)str;
-    h ^= *(const uint8_t *)(str+len-1);
-    b = *(const uint8_t *)(str+(len>>1));
-    h ^= b; h -= lj_rol(b, 14);
-  } else {
-    return 0;
-  }
+  // /* Compute string hash. Constants taken from lookup3 hash by Bob Jenkins. */
+  // if (len >= 4) {  /* Caveat: unaligned access! */
+  //   a = lj_getu32(str);
+  //   h ^= lj_getu32(str+len-4);
+  //   b = lj_getu32(str+(len>>1)-2);
+  //   h ^= b; h -= lj_rol(b, 14);
+  //   b += lj_getu32(str+(len>>2)-1);
+  // } else if (len > 0) {
+  //   a = *(const uint8_t *)str;
+  //   h ^= *(const uint8_t *)(str+len-1);
+  //   b = *(const uint8_t *)(str+(len>>1));
+  //   h ^= b; h -= lj_rol(b, 14);
+  // } else {
+  //   return 0;
+  // }
 
-  a ^= h; a -= lj_rol(h, 11);
-  b ^= a; b -= lj_rol(a, 25);
-  h ^= b; h -= lj_rol(b, 16);
+  // a ^= h; a -= lj_rol(h, 11);
+  // b ^= a; b -= lj_rol(a, 25);
+  // h ^= b; h -= lj_rol(b, 16);
 
-  return h;
+  // return h;
+
+	static uint64_t seed;
+	if(!seed) seed = wygrand();
+	return wyhash(str, lenx, seed);
 }
 
 MSize

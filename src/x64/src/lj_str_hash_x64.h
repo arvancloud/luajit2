@@ -248,20 +248,24 @@ static LJ_NOINLINE uint32_t lj_str_hash_128_above(const char* str,
 /* NOTE: the "len" should not be zero */
 static LJ_AINLINE uint32_t lj_str_hash(const char* str, size_t len)
 {
-  if (len < 128) {
-    if (len >= 16) { /* [16, 128) */
-      return lj_str_hash_16_128(str, len);
-    }
+  // if (len < 128) {
+  //   if (len >= 16) { /* [16, 128) */
+  //     return lj_str_hash_16_128(str, len);
+  //   }
 
-    if (len >= 4) { /* [4, 16) */
-      return lj_str_hash_4_16(str, len);
-    }
+  //   if (len >= 4) { /* [4, 16) */
+  //     return lj_str_hash_4_16(str, len);
+  //   }
 
-    /* [0, 4) */
-    return lj_str_hash_1_4(str, len);
-  }
-  /* [128, inf) */
-  return lj_str_hash_128_above(str, len);
+  //   /* [0, 4) */
+  //   return lj_str_hash_1_4(str, len);
+  // }
+  // /* [128, inf) */
+  // return lj_str_hash_128_above(str, len);
+
+	static uint64_t seed;
+	if(!seed) seed = wygrand();
+	return wyhash(str, len, seed);
 }
 
 #define LJ_ARCH_STR_HASH lj_str_hash
